@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>PassShield | Results</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
+
+</head>
+
+
+<body>
+
+    <main class="container">
+
+        <section class="card">
+
+
+            <!-- BRAND -->
+
+            <div class="brand">
+
+                <div class="logo">
+                    🛡️
+                </div>
+
+                <div class="brand-name">
+                    Pass<span>Shield</span>
+                </div>
+
+            </div>
+
+
+            <!-- HEADER -->
+
+            <div class="result-header">
+
+                <h1>
+                    Password
+                    <span class="gradient-text">
+                        Analysis
+                    </span>
+                </h1>
+
+                <p class="subtitle">
+                    Here's what PassShield found about your password.
+                </p>
+
+            </div>
+
+
+            <!-- RESULT GRID -->
+
+            <div class="result-grid">
+
+
+                <!-- PASSWORD STRENGTH -->
+
+                <div class="result-box">
+
+                    <h2>
+                        🔐 Password Strength
+                    </h2>
+
+
+                    {% if strength["score"] <= 1 %}
+
+                        <div class="status status-weak">
+                            Very Weak
+                        </div>
+
+                    {% elif strength["score"] == 2 %}
+
+                        <div class="status status-moderate">
+                            Moderate
+                        </div>
+
+                    {% else %}
+
+                        <div class="status status-strong">
+                            Strong
+                        </div>
+
+                    {% endif %}
+
+
+                    <div class="score-number">
+                        {{ strength["score"] }}/4
+                    </div>
+
+
+                    <div class="strength-bar">
+
+                        <div
+                            class="strength-fill"
+                            style="width: {{ (strength['score'] / 4) * 100 }}%;"
+                        ></div>
+
+                    </div>
+
+
+                    <!-- CUTE CAT -->
+
+                    <div class="cat-container">
+
+                        {% if strength["score"] <= 1 %}
+
+                            <div class="cat">
+                                🥺
+                            </div>
+
+                            <div class="cat-message">
+                                Aww... your password needs some work 💕
+                            </div>
+
+
+                        {% elif strength["score"] == 2 %}
+
+                            <div class="cat">
+                                😺
+                            </div>
+
+                            <div class="cat-message">
+                                You can do it better! Keep going ✨
+                            </div>
+
+
+                        {% else %}
+
+                            <div class="cat">
+                                😻
+                            </div>
+
+                            <div class="cat-message">
+                                Yay! That's a strong password! 💚
+                            </div>
+
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+
+                <!-- SECURITY CHECKS -->
+
+                <div class="result-box">
+
+                    <h2>
+                        🛡️ Security Checks
+                    </h2>
+
+
+                    <ul class="check-list">
+
+                        {% for check, result in strength["custom_checks"].items() %}
+
+                            <li>
+
+                                <span>
+
+                                    {% if check == "minimum_length" %}
+
+                                        Minimum length
+
+                                    {% elif check == "has_uppercase" %}
+
+                                        Uppercase letter
+
+                                    {% elif check == "has_lowercase" %}
+
+                                        Lowercase letter
+
+                                    {% elif check == "has_digit" %}
+
+                                        Number
+
+                                    {% elif check == "has_special_character" %}
+
+                                        Special character
+
+                                    {% else %}
+
+                                        {{ check }}
+
+                                    {% endif %}
+
+                                </span>
+
+
+                                {% if result %}
+
+                                    <span class="pass">
+                                        ✓ PASS
+                                    </span>
+
+                                {% else %}
+
+                                    <span class="fail">
+                                        ✕ FAIL
+                                    </span>
+
+                                {% endif %}
+
+                            </li>
+
+                        {% endfor %}
+
+                    </ul>
+
+
+                    <!-- BREACH CHECK -->
+
+                    <div class="breach-box">
+
+                        <h2>
+                            🔎 Breach Check
+                        </h2>
+
+
+                        {% if breach["breached"] %}
+
+                            <p class="breach-danger">
+
+                                ⚠️ This password has appeared in
+
+                                <strong>
+                                    {{ "{:,}".format(breach["breach_count"]) }}
+                                </strong>
+
+                                known data breaches.
+
+                            </p>
+
+
+                            <p>
+                                You should choose a different password.
+                            </p>
+
+
+                        {% else %}
+
+                            <p class="breach-safe">
+
+                                ✓ No known breaches found.
+
+                            </p>
+
+
+                            <p>
+                                This password was not found in the
+                                checked breach database.
+                            </p>
+
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- BACK BUTTON -->
+
+            <div class="back-container">
+
+                <a
+                    href="/"
+                    class="back-link"
+                >
+                    ← Check Another Password
+                </a>
+
+            </div>
+
+
+        </section>
+
+    </main>
+
+</body>
+
+</html>

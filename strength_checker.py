@@ -70,7 +70,8 @@ def calculate_strength(password):
         "score": final_score,
         "zxcvbn_score": zxcvbn_score,
         "custom_checks": custom_checks,
-        "feedback": zxcvbn_result["feedback"]
+        "feedback": zxcvbn_result["feedback"],
+        "password_length": len(password),
     }
 
 

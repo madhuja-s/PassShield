@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>PassShield | Password Security</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
+
+</head>
+
+
+<body>
+
+    <main class="container">
+
+        <section class="card">
+
+            <!-- BRAND -->
+
+            <div class="brand">
+
+                <div class="logo">
+                    🛡️
+                </div>
+
+                <div class="brand-name">
+                    Pass<span>Shield</span>
+                </div>
+
+            </div>
+
+
+            <!-- MAIN CONTENT -->
+
+            <h1>
+                Protect your
+                <span class="gradient-text">
+                    digital identity.
+                </span>
+            </h1>
+
+
+            <p class="subtitle">
+
+                Check your password strength and discover
+                whether it has appeared in known data breaches.
+
+                Your password is never stored.
+
+            </p>
+
+
+            <!-- PASSWORD FORM -->
+
+            <form
+                class="password-form"
+                method="POST"
+            >
+
+                <div class="input-wrapper">
+
+                    <input
+                        class="password-input"
+                        type="password"
+                        id="password"
+                        name="password"
+                        placeholder="Enter your password..."
+                        required
+                    >
+
+                    <button
+                        type="button"
+                        class="toggle-password"
+                        id="togglePassword"
+                        aria-label="Show password"
+                    >
+                        👁
+                    </button>
+
+                </div>
+
+
+                <button
+                    type="submit"
+                    class="primary-button"
+                >
+
+                    Check My Password
+                    →
+                    
+                </button>
+
+            </form>
+
+
+            <!-- FEATURES -->
+
+            <div class="features">
+
+                <div class="feature">
+                    🛡️ Strength Analysis
+                </div>
+
+                <div class="feature">
+                    🔍 Breach Detection
+                </div>
+
+                <div class="feature">
+                    🔒 Privacy First
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <!-- PASSWORD VISIBILITY SCRIPT -->
+
+    <script>
+
+        const passwordInput =
+            document.getElementById("password");
+
+        const togglePassword =
+            document.getElementById("togglePassword");
+
+
+        togglePassword.addEventListener(
+            "click",
+            function () {
+
+                if (
+                    passwordInput.type === "password"
+                ) {
+
+                    passwordInput.type = "text";
+
+                    togglePassword.textContent = "🙈";
+
+                } else {
+
+                    passwordInput.type = "password";
+
+                    togglePassword.textContent = "👁";
+
+                }
+
+            }
+        );
+
+    </script>
+
+</body>
+
+</html>
