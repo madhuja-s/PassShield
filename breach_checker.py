@@ -88,4 +88,4 @@ if __name__ == "__main__":
 
     else:
 
-        print("Good news: Password was not found in known breaches.")
+        print("Good news: Password was not found in known breaches.The password is good to go!")

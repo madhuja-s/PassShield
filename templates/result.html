@@ -74,13 +74,15 @@
                     </h2>
 
 
-                    {% if strength["score"] <= 1 %}
+                    <!-- STRENGTH STATUS -->
+
+                    {% if strength["score"] < 2 %}
 
                         <div class="status status-weak">
-                            Very Weak
+                            Weak
                         </div>
 
-                    {% elif strength["score"] == 2 %}
+                    {% elif strength["score"] <= 3 %}
 
                         <div class="status status-moderate">
                             Moderate
@@ -89,16 +91,20 @@
                     {% else %}
 
                         <div class="status status-strong">
-                            Strong
+                            High
                         </div>
 
                     {% endif %}
 
 
+                    <!-- SCORE -->
+
                     <div class="score-number">
                         {{ strength["score"] }}/4
                     </div>
 
+
+                    <!-- STRENGTH BAR -->
 
                     <div class="strength-bar">
 
@@ -114,7 +120,7 @@
 
                     <div class="cat-container">
 
-                        {% if strength["score"] <= 1 %}
+                        {% if strength["score"] < 2 %}
 
                             <div class="cat">
                                 🥺
@@ -125,7 +131,7 @@
                             </div>
 
 
-                        {% elif strength["score"] == 2 %}
+                        {% elif strength["score"] <= 3 %}
 
                             <div class="cat">
                                 😺
@@ -143,7 +149,7 @@
                             </div>
 
                             <div class="cat-message">
-                                Yay! That's a strong password! 💚
+                                Yay! That's a high-strength password! 💚
                             </div>
 
                         {% endif %}
@@ -233,7 +239,7 @@
 
                             <p class="breach-danger">
 
-                                ⚠️ This password has appeared in
+                                ⚠️ This password has been found in
 
                                 <strong>
                                     {{ "{:,}".format(breach["breach_count"]) }}
@@ -244,8 +250,12 @@
                             </p>
 
 
-                            <p>
-                                You should choose a different password.
+                            <p class="breach-danger">
+
+                                <strong>
+                                    Change your password immediately.
+                                </strong>
+
                             </p>
 
 
@@ -259,8 +269,10 @@
 
 
                             <p>
+
                                 This password was not found in the
                                 checked breach database.
+
                             </p>
 
                         {% endif %}
