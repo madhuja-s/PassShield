@@ -91,6 +91,36 @@
                 </div>
 
 
+                <!-- OPTIONAL PERSONAL-INFO CHECK -->
+
+                <div style="display: flex; gap: 10px; margin: 14px 0;">
+
+                    <input
+                        class="password-input"
+                        type="text"
+                        id="name"
+                        name="name"
+                        placeholder="Your name (optional)"
+                    >
+
+                    <input
+                        class="password-input"
+                        type="text"
+                        id="birth_year"
+                        name="birth_year"
+                        placeholder="Birth year (optional)"
+                        maxlength="4"
+                        inputmode="numeric"
+                    >
+
+                </div>
+
+                <p style="font-size: 0.75rem; opacity: 0.55; margin: -6px 0 14px 0;">
+                    Optional — only used to check if your password
+                    contains your name or birth year. Never stored.
+                </p>
+
+
                 <button
                     type="submit"
                     class="primary-button"

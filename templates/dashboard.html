@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>PassShield | Live Dashboard</title>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+            background: #0f1729;
+            color: #e5e7eb;
+            padding: 24px;
+        }
+
+        .dashboard-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: linear-gradient(135deg, #1e3a5f, #14532d);
+            padding: 20px 28px;
+            border-radius: 14px;
+            margin-bottom: 24px;
+        }
+
+        .dashboard-title {
+            font-size: 1.6rem;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .last-updated {
+            font-size: 0.85rem;
+            opacity: 0.75;
+        }
+
+        .kpi-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .kpi-card {
+            background: #16213e;
+            border-radius: 12px;
+            padding: 18px 20px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .kpi-label {
+            font-size: 0.8rem;
+            opacity: 0.65;
+            margin-bottom: 8px;
+        }
+
+        .kpi-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #2dd4bf;
+        }
+
+        .chart-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+            gap: 16px;
+        }
+
+        .chart-card {
+            background: #16213e;
+            border-radius: 12px;
+            padding: 18px 20px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .chart-title {
+            font-size: 0.95rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+            opacity: 0.9;
+        }
+
+        .chart-wrapper {
+            position: relative;
+            height: 240px;
+        }
+
+        .empty-note {
+            font-size: 0.85rem;
+            opacity: 0.5;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 24px;
+            color: #2dd4bf;
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+    <div class="dashboard-header">
+
+        <h1 class="dashboard-title">
+            🛡️ PassShield — Live Analytics
+        </h1>
+
+        <div class="last-updated" id="lastUpdated">
+            Loading...
+        </div>
+
+    </div>
+
+
+    <!-- KPI CARDS -->
+
+    <div class="kpi-row">
+
+        <div class="kpi-card">
+            <div class="kpi-label">Total Passwords Checked</div>
+            <div class="kpi-value" id="kpiTotal">—</div>
+        </div>
+
+        <div class="kpi-card">
+            <div class="kpi-label">Avg. Strength Score</div>
+            <div class="kpi-value" id="kpiStrength">—</div>
+        </div>
+
+        <div class="kpi-card">
+            <div class="kpi-label">Breach Rate</div>
+            <div class="kpi-value" id="kpiBreach">—</div>
+        </div>
+
+        <div class="kpi-card">
+            <div class="kpi-label">Avg. Algorithm Agreement</div>
+            <div class="kpi-value" id="kpiAgreement">—</div>
+        </div>
+
+        <div class="kpi-card">
+            <div class="kpi-label">Reuse Rate</div>
+            <div class="kpi-value" id="kpiReuse">—</div>
+        </div>
+
+        <div class="kpi-card">
+            <div class="kpi-label">Leakage Rate</div>
+            <div class="kpi-value" id="kpiLeakage">—</div>
+        </div>
+
+    </div>
+
+
+    <!-- CHARTS -->
+
+    <div class="chart-grid">
+
+        <div class="chart-card">
+            <div class="chart-title">Password Strength Distribution</div>
+            <div class="chart-wrapper">
+                <canvas id="strengthChart"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-card">
+            <div class="chart-title">Breached vs Safe</div>
+            <div class="chart-wrapper">
+                <canvas id="breachChart"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-card">
+            <div class="chart-title">Checked 3 Different Ways (Avg. Score)</div>
+            <div class="chart-wrapper">
+                <canvas id="algorithmChart"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-card">
+            <div class="chart-title">Improvement Rate: Nudge (B) vs Control (A)</div>
+            <div class="chart-wrapper">
+                <canvas id="abChart"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-card" style="grid-column: 1 / -1;">
+            <div class="chart-title">Checks Over Time</div>
+            <div class="chart-wrapper">
+                <canvas id="timeChart"></canvas>
+            </div>
+        </div>
+
+    </div>
+
+
+    <a href="/" class="back-link">← Back to PassShield</a>
+
+
+    <script>
+
+        // Shared Chart.js styling to match the dark theme
+        Chart.defaults.color = "#9ca3af";
+        Chart.defaults.borderColor = "rgba(255, 255, 255, 0.08)";
+
+        const teal = "#2dd4bf";
+        const green = "#4ade80";
+        const red = "#f87171";
+        const blue = "#60a5fa";
+        const purple = "#a78bfa";
+
+        let strengthChart, breachChart, algorithmChart, abChart, timeChart;
+
+        function buildCharts(data) {
+
+            const strengthCtx = document.getElementById("strengthChart");
+            const breachCtx = document.getElementById("breachChart");
+            const algorithmCtx = document.getElementById("algorithmChart");
+            const abCtx = document.getElementById("abChart");
+            const timeCtx = document.getElementById("timeChart");
+
+            const strengthLabels = Object.keys(data.strength_category_counts);
+            const strengthValues = Object.values(data.strength_category_counts);
+
+            strengthChart = new Chart(strengthCtx, {
+                type: "bar",
+                data: {
+                    labels: strengthLabels,
+                    datasets: [{
+                        label: "Passwords",
+                        data: strengthValues,
+                        backgroundColor: teal
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } }
+                }
+            });
+
+            breachChart = new Chart(breachCtx, {
+                type: "doughnut",
+                data: {
+                    labels: ["Breached", "Safe"],
+                    datasets: [{
+                        data: [data.breach_count, data.total_checks - data.breach_count],
+                        backgroundColor: [red, green]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+
+            algorithmChart = new Chart(algorithmCtx, {
+                type: "bar",
+                data: {
+                    labels: ["Pattern Check", "Randomness Check", "Rules Check"],
+                    datasets: [{
+                        label: "Avg. Score (0-4)",
+                        data: [
+                            data.avg_algorithm_scores.zxcvbn,
+                            data.avg_algorithm_scores.entropy,
+                            data.avg_algorithm_scores.rule_based
+                        ],
+                        backgroundColor: [teal, blue, purple]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { y: { max: 4 } },
+                    plugins: { legend: { display: false } }
+                }
+            });
+
+            abChart = new Chart(abCtx, {
+                type: "bar",
+                data: {
+                    labels: ["A (Control)", "B (Nudge)"],
+                    datasets: [{
+                        label: "Improvement Rate %",
+                        data: [
+                            data.improvement_by_variant.A || 0,
+                            data.improvement_by_variant.B || 0
+                        ],
+                        backgroundColor: [blue, teal]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { y: { max: 100 } },
+                    plugins: { legend: { display: false } }
+                }
+            });
+
+            timeChart = new Chart(timeCtx, {
+                type: "line",
+                data: {
+                    labels: data.checks_over_time.map(d => d.date),
+                    datasets: [{
+                        label: "Checks",
+                        data: data.checks_over_time.map(d => d.count),
+                        borderColor: teal,
+                        backgroundColor: "rgba(45, 212, 191, 0.15)",
+                        fill: true,
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } }
+                }
+            });
+
+        }
+
+        function updateCharts(data) {
+
+            strengthChart.data.labels = Object.keys(data.strength_category_counts);
+            strengthChart.data.datasets[0].data = Object.values(data.strength_category_counts);
+            strengthChart.update();
+
+            breachChart.data.datasets[0].data = [
+                data.breach_count,
+                data.total_checks - data.breach_count
+            ];
+            breachChart.update();
+
+            algorithmChart.data.datasets[0].data = [
+                data.avg_algorithm_scores.zxcvbn,
+                data.avg_algorithm_scores.entropy,
+                data.avg_algorithm_scores.rule_based
+            ];
+            algorithmChart.update();
+
+            abChart.data.datasets[0].data = [
+                data.improvement_by_variant.A || 0,
+                data.improvement_by_variant.B || 0
+            ];
+            abChart.update();
+
+            timeChart.data.labels = data.checks_over_time.map(d => d.date);
+            timeChart.data.datasets[0].data = data.checks_over_time.map(d => d.count);
+            timeChart.update();
+
+        }
+
+        function updateKPIs(data) {
+
+            document.getElementById("kpiTotal").textContent = data.total_checks;
+            document.getElementById("kpiStrength").textContent = data.avg_strength_score + " / 4";
+            document.getElementById("kpiBreach").textContent = data.breach_rate + "%";
+            document.getElementById("kpiAgreement").textContent = data.avg_agreement_score + "%";
+            document.getElementById("kpiReuse").textContent = data.reuse_rate + "%";
+            document.getElementById("kpiLeakage").textContent = data.leakage_rate + "%";
+
+            document.getElementById("lastUpdated").textContent =
+                "Last updated: " + data.last_updated;
+
+        }
+
+        function fetchAndRender() {
+
+            fetch("/dashboard-data")
+                .then(response => response.json())
+                .then(data => {
+
+                    updateKPIs(data);
+
+                    if (!strengthChart) {
+                        buildCharts(data);
+                    } else {
+                        updateCharts(data);
+                    }
+
+                })
+                .catch(error => {
+                    console.error("Dashboard fetch failed:", error);
+                });
+
+        }
+
+        // Initial load, then poll every 5 seconds for live updates
+        fetchAndRender();
+        setInterval(fetchAndRender, 5000);
+
+    </script>
+
+</body>
+
+</html>

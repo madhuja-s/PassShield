@@ -74,9 +74,18 @@
                     </h2>
 
 
+                    {% set is_risky_override = breach["breached"] or leakage["has_leakage"] %}
+
+
                     <!-- STRENGTH STATUS -->
 
-                    {% if strength["score"] < 2 %}
+                    {% if is_risky_override %}
+
+                        <div class="status status-weak">
+                            Risky
+                        </div>
+
+                    {% elif strength["score"] < 2 %}
 
                         <div class="status status-weak">
                             Weak
@@ -120,7 +129,31 @@
 
                     <div class="cat-container">
 
-                        {% if strength["score"] < 2 %}
+                        {% if is_risky_override %}
+
+                            <div class="cat">
+                                🥺
+                            </div>
+
+                            <div class="cat-message">
+
+                                {% if breach["breached"] %}
+
+                                    The score looks good, but this password
+                                    has been seen in real data breaches 💔
+
+                                {% else %}
+
+                                    The score looks good, but it still
+                                    contains personal info that's easy to
+                                    guess about you 💔
+
+                                {% endif %}
+
+                            </div>
+
+
+                        {% elif strength["score"] < 2 %}
 
                             <div class="cat">
                                 🥺
@@ -155,6 +188,21 @@
                         {% endif %}
 
                     </div>
+
+
+                    <!-- BEHAVIORAL NUDGE (Variant B only) -->
+
+                    {% if nudge_message %}
+
+                        <div class="breach-box">
+
+                            <p>
+                                💡 {{ nudge_message }}
+                            </p>
+
+                        </div>
+
+                    {% endif %}
 
                 </div>
 
@@ -255,7 +303,6 @@
                                 <strong>
                                     Change your password immediately.
                                 </strong>
-
                             </p>
 
 
@@ -279,9 +326,207 @@
 
                     </div>
 
+
+                    <!-- PERSONAL INFO LEAKAGE CHECK -->
+
+                    {% if leakage["checked"] %}
+
+                        <div class="breach-box">
+
+                            <h2>
+                                🕵️ Personal Info Check
+                            </h2>
+
+
+                            {% if leakage["has_leakage"] %}
+
+                                <p class="breach-danger">
+                                    ⚠️ This password appears to contain:
+                                </p>
+
+                                <ul class="check-list">
+
+                                    {% for leak in leakage["leaks_found"] %}
+
+                                        <li>
+                                            <span>{{ leak }}</span>
+                                        </li>
+
+                                    {% endfor %}
+
+                                </ul>
+
+                                <p class="breach-danger">
+
+                                    <strong>
+                                        Avoid using personal information
+                                        in your password.
+                                    </strong>
+                                </p>
+
+                            {% else %}
+
+                                <p class="breach-safe">
+                                    ✓ No personal-info leakage detected.
+                                </p>
+
+                            {% endif %}
+
+                        </div>
+
+                    {% endif %}
+
+
+                    <!-- REUSE CHECK -->
+
+                    {% if reuse["is_exact_repeat"] or reuse["is_similar_variation"] %}
+
+                        <div class="breach-box">
+
+                            <h2>
+                                🔁 Reuse Check
+                            </h2>
+
+
+                            {% if reuse["is_exact_repeat"] %}
+
+                                <p class="breach-danger">
+                                    ⚠️ You already checked this exact
+                                    password earlier in this session.
+                                </p>
+
+                            {% elif reuse["is_similar_variation"] %}
+
+                                <p class="breach-danger">
+                                    ⚠️ This looks like a variation of a
+                                    password you already checked in this
+                                    session.
+                                </p>
+
+                            {% endif %}
+
+                        </div>
+
+                    {% endif %}
+
                 </div>
 
             </div>
+
+
+            <!-- ALGORITHM COMPARISON + CRACK TIME -->
+
+            <div class="result-grid">
+
+
+                <!-- ALGORITHM COMPARISON -->
+
+                <div class="result-box">
+
+                    <h2>
+                        🧮 Checked 3 Different Ways
+                    </h2>
+
+
+                    <ul class="check-list">
+
+                        <li>
+                            <span>Pattern Check</span>
+                            <span class="pass">
+                                {{ comparison["zxcvbn"]["category"] }}
+                            </span>
+                        </li>
+
+                        <li>
+                            <span>Randomness Check</span>
+                            <span class="pass">
+                                {{ comparison["entropy"]["category"] }}
+                            </span>
+                        </li>
+
+                        <li>
+                            <span>Password Rules Check</span>
+                            <span class="pass">
+                                {{ comparison["rule_based"]["category"] }}
+                            </span>
+                        </li>
+
+                    </ul>
+
+
+                    {% if comparison["disagreement_flag"] %}
+
+                        <p class="breach-danger">
+                            ⚠️ Our checks don't fully agree on this one —
+                            it may look strong in one way but still be
+                            risky in another.
+                        </p>
+
+                    {% else %}
+
+                        <p class="breach-safe">
+                            ✓ All three checks agree on this result.
+                        </p>
+
+                    {% endif %}
+
+                </div>
+
+
+                <!-- CRACK TIME -->
+
+                <div class="result-box">
+
+                    <h2>
+                        ⏱️ How Fast Could It Be Guessed?
+                    </h2>
+
+
+                    <ul class="check-list">
+
+                        {% for scenario in crack_time["scenarios"] %}
+
+                            <li>
+                                <span>{{ scenario["scenario"] }}</span>
+                                <span class="pass">{{ scenario["display_time"] }}</span>
+                            </li>
+
+                        {% endfor %}
+
+                    </ul>
+
+                </div>
+
+            </div>
+
+
+            <!-- PASSPHRASE SUGGESTIONS -->
+
+            {% if passphrase_suggestions %}
+
+                <div class="result-box">
+
+                    <h2>
+                        🔑 Try One Of These Instead
+                    </h2>
+
+
+                    <ul class="check-list">
+
+                        {% for suggestion in passphrase_suggestions %}
+
+                            <li>
+                                <span>{{ suggestion["passphrase"] }}</span>
+                                <span class="pass">{{ suggestion["strength_label"] }}</span>
+                            </li>
+
+                        {% endfor %}
+
+                    </ul>
+
+                </div>
+
+            {% endif %}
 
 
             <!-- BACK BUTTON -->
