@@ -49,6 +49,59 @@
             opacity: 0.75;
         }
 
+        .latest-check-card {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 22px 28px;
+            border-radius: 14px;
+            margin-bottom: 24px;
+            border: 2px solid transparent;
+            transition: background 0.3s ease, border-color 0.3s ease;
+        }
+
+        .latest-check-card.state-empty {
+            background: #16213e;
+            border-color: rgba(255, 255, 255, 0.08);
+        }
+
+        .latest-check-card.state-weak {
+            background: linear-gradient(135deg, #4c1d1d, #7f1d1d);
+            border-color: #f87171;
+        }
+
+        .latest-check-card.state-moderate {
+            background: linear-gradient(135deg, #4a3a12, #78350f);
+            border-color: #fbbf24;
+        }
+
+        .latest-check-card.state-strong {
+            background: linear-gradient(135deg, #14532d, #166534);
+            border-color: #4ade80;
+        }
+
+        .latest-check-card.state-risky {
+            background: linear-gradient(135deg, #4c1d1d, #7f1d1d);
+            border-color: #f87171;
+        }
+
+        .latest-check-label {
+            font-size: 0.85rem;
+            opacity: 0.75;
+            margin-bottom: 6px;
+        }
+
+        .latest-check-value {
+            font-size: 1.7rem;
+            font-weight: 700;
+        }
+
+        .latest-check-sub {
+            font-size: 0.9rem;
+            opacity: 0.85;
+            margin-top: 4px;
+        }
+
         .kpi-row {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -135,6 +188,19 @@
     </div>
 
 
+    <!-- LATEST CHECK -- always reflects just the most recent password -->
+
+    <div class="latest-check-card state-empty" id="latestCheckCard">
+
+        <div>
+            <div class="latest-check-label">Most Recently Checked Password</div>
+            <div class="latest-check-value" id="latestCheckValue">No checks yet</div>
+            <div class="latest-check-sub" id="latestCheckSub">Check a password on the main page to see it here</div>
+        </div>
+
+    </div>
+
+
     <!-- KPI CARDS -->
 
     <div class="kpi-row">
@@ -184,7 +250,7 @@
         </div>
 
         <div class="chart-card">
-            <div class="chart-title">Breached vs Safe</div>
+            <div class="chart-title">Found in a Known Breach?</div>
             <div class="chart-wrapper">
                 <canvas id="breachChart"></canvas>
             </div>
@@ -262,7 +328,7 @@
             breachChart = new Chart(breachCtx, {
                 type: "doughnut",
                 data: {
-                    labels: ["Breached", "Safe"],
+                    labels: ["Found in Breach", "Not Found in Breach"],
                     datasets: [{
                         data: [data.breach_count, data.total_checks - data.breach_count],
                         backgroundColor: [red, green]
@@ -370,6 +436,57 @@
 
         }
 
+        function updateLatestCheck(latestCheck) {
+
+            const card = document.getElementById("latestCheckCard");
+            const valueEl = document.getElementById("latestCheckValue");
+            const subEl = document.getElementById("latestCheckSub");
+
+            if (!latestCheck) {
+                card.className = "latest-check-card state-empty";
+                valueEl.textContent = "No checks yet";
+                subEl.textContent = "Check a password on the main page to see it here";
+                return;
+            }
+
+            // Risky (breached or leaks personal info) always wins,
+            // regardless of the raw score -- same override logic
+            // used on the results page itself
+            let state = "moderate";
+
+            if (latestCheck.is_risky) {
+                state = "risky";
+            } else if (latestCheck.strength_score < 2) {
+                state = "weak";
+            } else if (latestCheck.strength_score <= 3) {
+                state = "moderate";
+            } else {
+                state = "strong";
+            }
+
+            card.className = "latest-check-card state-" + state;
+
+            valueEl.textContent = latestCheck.strength_category +
+                " (" + latestCheck.strength_score + " / 4)";
+
+            let subParts = [];
+
+            if (latestCheck.breached) {
+                subParts.push("⚠️ Found in a known breach");
+            }
+
+            if (latestCheck.has_leakage) {
+                subParts.push("⚠️ Contains personal info");
+            }
+
+            if (subParts.length === 0) {
+                subParts.push("No breach or personal-info issues found");
+            }
+
+            subEl.textContent = subParts.join(" · ");
+
+        }
+
         function updateKPIs(data) {
 
             document.getElementById("kpiTotal").textContent = data.total_checks;
@@ -386,11 +503,15 @@
 
         function fetchAndRender() {
 
-            fetch("/dashboard-data")
+            // The timestamp query param forces a unique URL on every
+            // call, so the browser can never serve a cached response
+            // instead of asking the server for fresh data
+            fetch("/dashboard-data?t=" + Date.now(), { cache: "no-store" })
                 .then(response => response.json())
                 .then(data => {
 
                     updateKPIs(data);
+                    updateLatestCheck(data.latest_check);
 
                     if (!strengthChart) {
                         buildCharts(data);

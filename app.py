@@ -130,9 +130,18 @@ def dashboard_data():
     JSON endpoint the dashboard page polls. Recomputes stats
     fresh from password_logs.json on every call, so the numbers
     are always current as of the moment they're requested.
+
+    Explicit no-cache headers so the browser never serves a
+    stale cached copy of this response instead of hitting the
+    server for the latest data.
     """
 
-    return jsonify(compute_dashboard_stats())
+    response = jsonify(compute_dashboard_stats())
+    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+
+    return response
 
 
 if __name__ == "__main__":

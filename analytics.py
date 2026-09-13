@@ -167,6 +167,35 @@ def compute_dashboard_stats():
         for day, count in sorted(checks_by_day.items())
     ]
 
+    # --- Latest check -- always reflects the single most recent
+    # password, independent of everything else on the dashboard.
+    # This is what actually changes, visibly, every time someone
+    # checks a password -- the averages above barely move once
+    # there's history behind them, so this card is the fix for
+    # "the dashboard looks the same for a weak vs strong password."
+
+    latest_check = None
+
+    if logs:
+
+        latest_entry = logs[-1]
+
+        latest_leakage = latest_entry.get("leakage", {})
+
+        is_risky = (
+            latest_entry.get("breached")
+            or latest_leakage.get("has_leakage")
+        )
+
+        latest_check = {
+            "strength_category": latest_entry.get("strength_category", "Unknown"),
+            "strength_score": latest_entry.get("strength_score"),
+            "breached": latest_entry.get("breached", False),
+            "has_leakage": latest_leakage.get("has_leakage", False),
+            "is_risky": is_risky,
+            "timestamp": latest_entry.get("timestamp")
+        }
+
     return {
         "total_checks": total_checks,
         "avg_strength_score": avg_strength_score,
@@ -181,6 +210,7 @@ def compute_dashboard_stats():
         "variant_counts": dict(variant_counts),
         "improvement_by_variant": improvement_by_variant,
         "checks_over_time": checks_over_time,
+        "latest_check": latest_check,
         "last_updated": datetime.now().strftime("%H:%M:%S")
     }
 
