@@ -295,6 +295,43 @@
         const blue = "#60a5fa";
         const purple = "#a78bfa";
 
+        // Custom Chart.js plugin: draws the exact value above each bar,
+        // so a change is visible as a number even when the bar height
+        // shift is too small to notice by eye
+        const valueLabelPlugin = {
+            id: "valueLabelPlugin",
+            afterDatasetsDraw(chart) {
+
+                const { ctx } = chart;
+
+                if (chart.config.type !== "bar") {
+                    return;
+                }
+
+                chart.data.datasets.forEach((dataset, datasetIndex) => {
+
+                    const meta = chart.getDatasetMeta(datasetIndex);
+
+                    meta.data.forEach((bar, index) => {
+
+                        const value = dataset.data[index];
+
+                        ctx.save();
+                        ctx.fillStyle = "#e5e7eb";
+                        ctx.font = "bold 13px system-ui, sans-serif";
+                        ctx.textAlign = "center";
+                        ctx.fillText(value, bar.x, bar.y - 8);
+                        ctx.restore();
+
+                    });
+
+                });
+
+            }
+        };
+
+        Chart.register(valueLabelPlugin);
+
         let strengthChart, breachChart, algorithmChart, abChart, timeChart;
 
         function buildCharts(data) {
@@ -328,7 +365,10 @@
             breachChart = new Chart(breachCtx, {
                 type: "doughnut",
                 data: {
-                    labels: ["Found in Breach", "Not Found in Breach"],
+                    labels: [
+                        "Found in Breach (" + data.breach_count + ")",
+                        "Not Found in Breach (" + (data.total_checks - data.breach_count) + ")"
+                    ],
                     datasets: [{
                         data: [data.breach_count, data.total_checks - data.breach_count],
                         backgroundColor: [red, green]
@@ -411,6 +451,10 @@
             strengthChart.data.datasets[0].data = Object.values(data.strength_category_counts);
             strengthChart.update();
 
+            breachChart.data.labels = [
+                "Found in Breach (" + data.breach_count + ")",
+                "Not Found in Breach (" + (data.total_checks - data.breach_count) + ")"
+            ];
             breachChart.data.datasets[0].data = [
                 data.breach_count,
                 data.total_checks - data.breach_count
