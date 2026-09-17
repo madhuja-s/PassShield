@@ -314,7 +314,11 @@
 
                     meta.data.forEach((bar, index) => {
 
-                        const value = dataset.data[index];
+                        const rawValue = dataset.data[index];
+
+                        const value = Number.isInteger(rawValue)
+                            ? rawValue
+                            : Math.round(rawValue * 100) / 100;
 
                         ctx.save();
                         ctx.fillStyle = "#e5e7eb";
